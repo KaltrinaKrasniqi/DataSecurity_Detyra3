@@ -14,7 +14,7 @@ This project was made for assignment 3 in Data Security class 2024
 1. Your Java files are named correctly and match the class names.
 2. All necessary dependencies are included in the classpath.
 
-# Description of the SSL/TLS Handshake Simulation
+## Description of the SSL/TLS Handshake Simulation
 
 TLS, or transport layer security, is a protocol used across the globe to encrypt and secure communication over the internet.
 TLS and its predecessor SSL (secure socket layer) are the most commonly used cryptographic protocols for providing encryption, authenticity, and integrity, which enables end-to-end security of data sent between applications over the internet.
@@ -50,7 +50,7 @@ To solve this type of problem, SSL and TLS were introduced. They provide three p
 * The server sends a Finished message encrypted with the session key, signaling the end of the handshake.
 * Once the client responds with its Finished message, the handshake is complete.
 
-# SSL/TLS Handshake Simulation with Certificate Verification
+## SSL/TLS Handshake Simulation with Certificate Verification
 
 Follow the instructions below to set up the necessary keys and certificates using Java Keytool, and to run the application.
 
@@ -76,7 +76,7 @@ e.g: keytool -list -v -keystore server.keystore
      keytool -list -v -keystore client.truststore
 
 
-# Examples from Execution
+## Examples from Execution
 
 
 
