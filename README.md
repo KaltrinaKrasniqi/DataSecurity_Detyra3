@@ -54,6 +54,32 @@ An SSL or TLS handshake is a series of actions carried out by the client and ser
 * The server sends a Finished message encrypted with the session key, signaling the end of the handshake.
 * Once the client responds with its Finished message, the handshake is complete.
 
+# SSL/TLS Handshake Simulation with Certificate Verification
+
+Follow the instructions below to set up the necessary keys and certificates using Java Keytool, and to run the application.
+
+## Prerequisites
+
+- Java Development Kit (JDK) installed on your machine.
+
+## Generating Keys and Certificates
+
+To simulate an SSL/TLS handshake with certificate verification, you need to create a key pair and a self-signed certificate for your server. Here are the steps to do this using Java Keytool.
+
+### Step 1: Generate a Key Pair
+e.g: keytool -genkeypair -alias serverkey -keyalg RSA -keysize 2048 -validity 365 -keystore server.keystore
+
+### Step 2: Export the Server Certificate
+e.g: keytool -exportcert -alias serverkey -file server.cer -keystore server.keystore
+
+### Step 3: Import the Server Certificate into the Client Truststore
+e.g: keytool -importcert -alias servercert -file server.cer -keystore client.truststore
+
+### Step 4: Verify the Contents of the Keystores and Truststores
+e.g: keytool -list -v -keystore server.keystore
+     keytool -list -v -keystore client.truststore
+
+
 # Examples from Execution
 
 
