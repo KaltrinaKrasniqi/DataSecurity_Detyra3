@@ -76,7 +76,7 @@ e.g: keytool -list -v -keystore server.keystore
      keytool -list -v -keystore client.truststore
 
 
-## Examples from Execution
+## Example from Execution
 
 ![final Gif (1)](https://github.com/KaltrinaKrasniqi/DataSecurity_Detyra3/assets/116517705/b2bc2f47-35a6-48b7-876b-2f4ddb778b39)
 
