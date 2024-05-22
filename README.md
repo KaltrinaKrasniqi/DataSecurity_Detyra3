@@ -26,7 +26,7 @@ To solve this type of problem, SSL and TLS were introduced. They provide three p
 * Authentication: In most modes, TLS provides peer authentication using signed certificates. Servers are usually authenticated, and clients may be authenticated as requested by servers. This authentication happens as part of the TLS handshake.
 * Confidentiality: TLS encrypts data being sent between client and server, protecting the confidentiality and privacy of data. This ensures that passive wiretappers won't see sensitive data shared between the machines.
 
-## TLS Handshake
+### TLS Handshake
 
 An SSL or TLS handshake is a series of actions carried out by the client and server that authenticates them to each other, and establishes the secret keys they'll use to interact.
 
@@ -54,6 +54,7 @@ An SSL or TLS handshake is a series of actions carried out by the client and ser
 * The server sends a Finished message encrypted with the session key, signaling the end of the handshake.
 * Once the client responds with its Finished message, the handshake is complete.
 
+# Examples from Execution
 
 
 
