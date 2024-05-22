@@ -78,7 +78,8 @@ e.g: keytool -list -v -keystore server.keystore
 
 ## Examples from Execution
 
-![Gif-DataSecurity (1)](https://github.com/KaltrinaKrasniqi/DataSecurity_Detyra3/assets/116517705/1e4108b6-575f-4e6f-8e39-35ea0da39607)
+![Gif-DataSecurity (2)](https://github.com/KaltrinaKrasniqi/DataSecurity_Detyra3/assets/116517705/5a90203a-f159-46f8-94f2-177ed0340a54)
+
 
 
 
