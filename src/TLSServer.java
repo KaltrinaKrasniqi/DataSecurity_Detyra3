@@ -103,8 +103,8 @@ public class TLSServer {
             // Qelesi shum i vogel, AES celesi eshte 128 bit Prandaj e bajm hash
             MessageDigest hashICelesit = MessageDigest.getInstance("SHA-256");
             keyNeByte = hashICelesit.digest(keyNeByte);
-            //Veq 128 bitat e par i merr t hashit (SHA i jep 256)
-            keyNeByte = Arrays.copyOf(keyNeByte, 16); // Use only first 128 bits for AES
+            //Veq 128 bitat e par i merr t hashit (SHA i jep 256)  (16*8bit = 128)
+            keyNeByte = Arrays.copyOf(keyNeByte, 16);
             SecretKey celesiSekretAES = new SecretKeySpec(keyNeByte, "AES");
 
 
@@ -147,6 +147,7 @@ public class TLSServer {
                 clientSocket.close();
             } catch (IOException e) {
                 System.err.println("Error closing client socket: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }

@@ -6,6 +6,8 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.KeyStore;
 import java.security.MessageDigest;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -14,92 +16,116 @@ public class TLSClient {
     private static final int PORT = 8443;
     private static final String TRUSTSTORE_PATH = "clienttruststore.jks";
     private static final String TRUSTSTORE_PASSWORD = "Prej1deri8";
+    //Diffie Hellman (keto t njejta met Serverit)
     public static final BigInteger P = new BigInteger("23");
     public static final BigInteger G = new BigInteger("5");
 
     public static void main(String[] args) {
         try {
+            //tash klienti e ka trustStore (me pas pasin korrekt, portin)
             KeyStore trustStore = KeyStore.getInstance("JKS");
+            
             trustStore.load(new FileInputStream(TRUSTSTORE_PATH), TRUSTSTORE_PASSWORD.toCharArray());
 
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(trustStore);
+            //Njejt s sikurse KeyMenager klienti ka TrustMenager
+            TrustManagerFactory menager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            menager.init(trustStore);
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+            SSLContext tls = SSLContext.getInstance("TLS");
+            
+            tls.init(null, menager.getTrustManagers(), null);
 
-            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            //kish ba edhe pa factory amo ma leht menagjohet
+            SSLSocketFactory socketFactory = tls.getSocketFactory();
+
             SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(HOST, PORT);
 
             System.out.println("Attempting to establish a secure connection with the server...");
 
             sslSocket.startHandshake();
+            //Momentin qe s gjun error, handhake u kompletu
             System.out.println("Server certificate received. Verifying...");
 
+
             SSLSession sslSession = sslSocket.getSession();
-            java.security.cert.Certificate[] serverCerts = sslSession.getPeerCertificates();
-            java.security.cert.X509Certificate serverCert = (java.security.cert.X509Certificate) serverCerts[0];
-            serverCert.checkValidity();
+
+            //Certifikata e cila u vendos nga keytool vendoset ne objekt
+            Certificate[] serverCerts = sslSession.getPeerCertificates();
+            X509Certificate certificate = (X509Certificate) serverCerts[0];
+
+            certificate.checkValidity();  //Nese gjun erro i bje qe jo valide
+
             System.out.println("Server certificate is valid.");
             System.out.println("SSL/TLS handshake successful. Secure communication channel established.");
 
-            PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true);
+            //Me shkru serverit mesazhe
+            PrintWriter writeServer = new PrintWriter(sslSocket.getOutputStream(), true);
+
+            //Me marr mesazhe nga
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+            BufferedReader readFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
-            BigInteger clientPrivateKey = generateDHPrivateKey();
-            BigInteger clientPublicKey = G.modPow(clientPrivateKey, P);
+            //Diffie hellMan - Si ne ligjerata
+            BigInteger A = generateDHPrivateKey();
+            BigInteger clientPublicKey = G.modPow(A, P);
 
-            String serverPublicKeyStr = reader.readLine();
+            String serverPublicKeyStr = readFromServer.readLine();
+
             BigInteger serverPublicKey = new BigInteger(serverPublicKeyStr);
 
-            out.println(clientPublicKey.toString());
+            writeServer.println(clientPublicKey.toString());
 
-            BigInteger sharedSecret = serverPublicKey.modPow(clientPrivateKey, P);
+            BigInteger exchangedKey = serverPublicKey.modPow(A, P);
 
 
-            System.out.println("Echanged key: "+sharedSecret);
+            System.out.println("Echanged key: "+exchangedKey);
 
             // Generate AES encryption key from shared secret
-            byte[] sharedSecretBytes = sharedSecret.toByteArray();
-            MessageDigest sha = MessageDigest.getInstance("SHA-256");
-            sharedSecretBytes = sha.digest(sharedSecretBytes);
-            sharedSecretBytes = Arrays.copyOf(sharedSecretBytes, 16); // Use only first 128 bits for AES
-            SecretKey secretKey = new SecretKeySpec(sharedSecretBytes, "AES");
+            byte[] keyNeByte = exchangedKey.toByteArray();
 
-            // Initialize AES cipher for encryption and decryption
+            // Qelesi shum i vogel, AES celesi eshte 128 bit Prandaj e bajm hash
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            keyNeByte = sha.digest(keyNeByte);
+            keyNeByte = Arrays.copyOf(keyNeByte, 16); // vew 128 t parat i merr (16*8bit = 128)
+            SecretKey celesiSekretAES = new SecretKeySpec(keyNeByte, "AES");
+
+            // E bejme gati viper per enkriptim e dekriptim tani veq e thirrum pasi qelsi ska me ndryshu gjat sesionit
             Cipher encryptCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            encryptCipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            encryptCipher.init(Cipher.ENCRYPT_MODE, celesiSekretAES);
 
             Cipher decryptCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            decryptCipher.init(Cipher.DECRYPT_MODE, secretKey);
+            decryptCipher.init(Cipher.DECRYPT_MODE, celesiSekretAES);
 
             // Communication loop
             String userInput;
             while ((userInput = in.readLine()) != null) {
-                // Encrypt user input
+                // Enkripton inputin e userit
                 byte[] encryptedBytes = encryptCipher.doFinal(userInput.getBytes());
+
                 String encryptedMessage = Base64.getEncoder().encodeToString(encryptedBytes);
 
-                // Send encrypted message to server
-                out.println(encryptedMessage);
+                // Dergon Mesazhin serverit te enkriptum
+                writeServer.println(encryptedMessage);
 
-                // Receive response from server
-                String serverResponse = reader.readLine();
+                // Merr pergjigjet
+                String serverResponse = readFromServer.readLine();
+
                 System.out.println("From Server (Encrypted): " + serverResponse);
 
-                // Decrypt server response
+                // Dekripton pergjigjet e enkriptuara nga serveri
                 byte[] serverResponseBytes = Base64.getDecoder().decode(serverResponse);
+
                 String decryptedMessage = new String(decryptCipher.doFinal(serverResponseBytes));
 
                 System.out.println("Decrypted Message: " + decryptedMessage);
 
-                // exit in console to exit
+                // Me exit ndalet programi
                 if ("exit".equalsIgnoreCase(userInput)) break;
             }
 
             sslSocket.close();
         } catch (Exception e) {
+            System.err.println("Error...");
             e.printStackTrace();
         }
     }
